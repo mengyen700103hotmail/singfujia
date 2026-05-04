@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>幸福家大泡成交美化助手</title>
+    <title>幸福家大泡成交助手 V1.3</title>
     <style>
         :root {
             --gold-gradient: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
@@ -32,22 +32,21 @@
         h2 {
             text-align: center;
             color: var(--xingfu-red);
-            margin-bottom: 20px;
+            margin-bottom: 5px;
             font-size: 22px;
-            letter-spacing: 1px;
         }
 
         .mode-indicator {
             text-align: center;
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 15px;
             height: 20px;
         }
 
         textarea {
             width: 100%;
-            height: 180px;
+            height: 160px;
             padding: 15px;
             border: 2px solid #eaedf2;
             border-radius: 12px;
@@ -56,42 +55,56 @@
             outline: none;
             transition: 0.3s;
             margin-bottom: 15px;
+            background-color: #fff;
         }
 
         textarea:focus {
             border-color: var(--xingfu-red);
         }
 
-        .btn-group {
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-full {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             margin-bottom: 20px;
         }
 
         button {
-            flex: 1;
-            padding: 15px;
+            padding: 14px;
             border-radius: 10px;
             border: none;
             font-weight: bold;
             font-size: 16px;
             cursor: pointer;
-            transition: transform 0.1s, opacity 0.2s;
+            transition: 0.2s;
         }
 
         .btn-gold {
             background: var(--gold-gradient);
             color: #333;
-            box-shadow: 0 4px 15px rgba(180, 140, 40, 0.3);
+            flex: 2;
+        }
+
+        .btn-clear {
+            background-color: #6c757d;
+            color: white;
+            flex: 1;
         }
 
         .btn-copy {
             background-color: #25d366;
             color: white;
+            width: 100%;
         }
 
         button:active {
-            transform: scale(0.97);
+            transform: scale(0.96);
         }
 
         .output-box {
@@ -104,6 +117,16 @@
             font-size: 17px;
             color: #2c3e50;
             min-height: 100px;
+            position: relative;
+        }
+
+        #copyStatus {
+            text-align: center;
+            font-size: 12px;
+            color: #28a745;
+            margin-top: 5px;
+            height: 15px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -111,20 +134,22 @@
 
 <div class="container">
     <h2>🏆 幸福家菁英成交助手</h2>
-    <div id="modeStatus" class="mode-indicator">輸入文字自動偵測成交規格...</div>
+    <div id="modeStatus" class="mode-indicator">等待輸入...</div>
     
-    <textarea id="inputText" oninput="detectMode()" placeholder="請貼上成交內容，例如：&#10;湖美店大泡成交通知&#10;案名：..."></textarea>
+    <textarea id="inputText" oninput="detectMode()" placeholder="請貼上成交內容..."></textarea>
 
-    <div class="btn-group">
+    <div class="btn-grid">
         <button class="btn-gold" onclick="generate()">✨ 豪華美化生成</button>
-        <button class="btn-copy" onclick="copyText()">📋 複製發送</button>
+        <button class="btn-clear" onclick="clearAll()">🗑️ 清除</button>
     </div>
+    
+    <button class="btn-copy" onclick="copyText()">📋 複製結果 (免跳窗)</button>
+    <div id="copyStatus"></div>
 
     <div id="resultBox" class="output-box">美化結果將顯示於此...</div>
 </div>
 
 <script>
-    // 符號池定義
     const emojis = {
         normalTitle: ["✨", "🎊", "🎉", "🔥"],
         bigTitle: ["👑", "💎", "🏆", "🌟", "📣", "🎊", "🏮"],
@@ -138,16 +163,27 @@
         return arr[Math.floor(Math.random() * arr.length)];
     }
 
+    // 偵測是否為大泡模式
     function detectMode() {
         const text = document.getElementById('inputText').value;
         const status = document.getElementById('modeStatus');
         if (text.includes("大泡")) {
-            status.innerHTML = "<b style='color:#b38728;'>🔥 已偵測：【大泡成交】模式（自動開啟豪華裝飾）</b>";
+            status.innerHTML = "<b style='color:#b38728;'>🔥 已偵測：【大泡成交】模式（豪華裝飾啟動）</b>";
         } else {
             status.innerText = "一般成交模式";
         }
+        document.getElementById('copyStatus').innerText = ""; // 重置複製狀態
     }
 
+    // 清除功能
+    function clearAll() {
+        document.getElementById('inputText').value = "";
+        document.getElementById('resultBox').innerText = "美化結果將顯示於此...";
+        document.getElementById('modeStatus').innerText = "等待輸入...";
+        document.getElementById('copyStatus').innerText = "";
+    }
+
+    // 生成美化文字
     function generate() {
         const raw = document.getElementById('inputText').value.trim();
         if (!raw) return;
@@ -159,28 +195,28 @@
             let content = line.trim();
             if (!content) return "";
 
-            // 1. 標題行
+            // 第一行標題
             if (i === 0) {
                 const icon = isBig ? pick(emojis.bigTitle) : pick(emojis.normalTitle);
-                return `${icon}${content}${icon}`;
+                return `${icon} ${content} ${icon}`;
             }
 
-            // 2. 案名
+            // 案名
             if (content.includes("案名")) {
                 return `${pick(emojis.arrows)} ${content}`;
             }
 
-            // 3. 人員 (開發、銷售)
+            // 開發/銷售
             if (content.includes("開發") || content.includes("銷售")) {
                 return `${pick(emojis.checks)} ${content}`;
             }
 
-            // 4. 時間
+            // 時間日期
             if (content.includes("日期") || content.includes("時間") || content.includes("成交")) {
                 return `${pick(emojis.dates)} ${content}`;
             }
 
-            // 5. 祝賀詞或結尾
+            // 祝賀語
             if (content.includes("祝") || content.includes("賀") || isBig) {
                 const suffix = isBig ? `${pick(emojis.luxury)}${pick(emojis.luxury)}` : pick(emojis.luxury);
                 return `${content} ${suffix}`;
@@ -190,12 +226,23 @@
         });
 
         document.getElementById('resultBox').innerText = processed.join('\n');
+        document.getElementById('copyStatus').innerText = ""; 
     }
 
+    // 複製功能 (移除 Alert)
     async function copyText() {
         const text = document.getElementById('resultBox').innerText;
-        await navigator.clipboard.writeText(text);
-        alert("複製成功！祝您案源不斷，冒泡連連！");
+        if (text.includes("美化結果")) return;
+
+        try {
+            await navigator.clipboard.writeText(text);
+            const status = document.getElementById('copyStatus');
+            status.innerText = "✅ 已成功複製到剪貼簿！";
+            // 3秒後自動消失提示文字
+            setTimeout(() => { status.innerText = ""; }, 3000);
+        } catch (err) {
+            console.error('複製失敗', err);
+        }
     }
 </script>
 

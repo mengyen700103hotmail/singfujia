@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>幸福家大泡成交助手 V1.3</title>
+    <title>幸福家成交助手 V1.4</title>
     <style>
         :root {
-            --gold-gradient: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
             --xingfu-red: #e60012;
-            --bg-color: #f7f9fc;
+            --bg-color: #f8f9fa;
         }
 
         body {
             font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
             background-color: var(--bg-color);
-            padding: 15px;
+            padding: 20px;
             display: flex;
             justify-content: center;
         }
@@ -23,8 +22,8 @@
             background: white;
             width: 100%;
             max-width: 600px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             padding: 25px;
             box-sizing: border-box;
         }
@@ -33,13 +32,12 @@
             text-align: center;
             color: var(--xingfu-red);
             margin-bottom: 5px;
-            font-size: 22px;
         }
 
-        .mode-indicator {
+        .status-bar {
             text-align: center;
             font-size: 13px;
-            color: #888;
+            color: #666;
             margin-bottom: 15px;
             height: 20px;
         }
@@ -48,36 +46,28 @@
             width: 100%;
             height: 160px;
             padding: 15px;
-            border: 2px solid #eaedf2;
-            border-radius: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
             font-size: 16px;
             box-sizing: border-box;
             outline: none;
-            transition: 0.3s;
             margin-bottom: 15px;
-            background-color: #fff;
         }
 
         textarea:focus {
             border-color: var(--xingfu-red);
         }
 
-        .btn-grid {
+        .btn-row {
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 10px;
             margin-bottom: 10px;
         }
 
-        .btn-full {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
         button {
             padding: 14px;
-            border-radius: 10px;
+            border-radius: 8px;
             border: none;
             font-weight: bold;
             font-size: 16px;
@@ -85,20 +75,18 @@
             transition: 0.2s;
         }
 
-        .btn-gold {
-            background: var(--gold-gradient);
-            color: #333;
-            flex: 2;
+        .btn-gen {
+            background-color: var(--xingfu-red);
+            color: white;
         }
 
         .btn-clear {
             background-color: #6c757d;
             color: white;
-            flex: 1;
         }
 
         .btn-copy {
-            background-color: #25d366;
+            background-color: #28a745;
             color: white;
             width: 100%;
         }
@@ -107,141 +95,133 @@
             transform: scale(0.96);
         }
 
-        .output-box {
-            background-color: #fffdf2;
-            border: 1px solid #ffeeba;
-            border-radius: 12px;
-            padding: 20px;
+        .result-area {
+            margin-top: 20px;
+            background-color: #fdfdfd;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 15px;
             white-space: pre-wrap;
             line-height: 1.8;
-            font-size: 17px;
-            color: #2c3e50;
-            min-height: 100px;
-            position: relative;
+            font-size: 16px;
+            color: #333;
         }
 
-        #copyStatus {
+        #msg {
             text-align: center;
             font-size: 12px;
             color: #28a745;
+            height: 20px;
             margin-top: 5px;
-            height: 15px;
-            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🏆 幸福家菁英成交助手</h2>
-    <div id="modeStatus" class="mode-indicator">等待輸入...</div>
+    <h2>🏠 幸福家成交助手</h2>
+    <div id="modeDisplay" class="status-bar">請輸入成交資訊...</div>
     
-    <textarea id="inputText" oninput="detectMode()" placeholder="請貼上成交內容..."></textarea>
+    <textarea id="inputArea" oninput="checkMode()" placeholder="請在此貼上成交訊息內容..."></textarea>
 
-    <div class="btn-grid">
-        <button class="btn-gold" onclick="generate()">✨ 豪華美化生成</button>
-        <button class="btn-clear" onclick="clearAll()">🗑️ 清除</button>
+    <div class="btn-row">
+        <button class="btn-gen" onclick="generate()">✨ 產生美化訊息</button>
+        <button class="btn-clear" onclick="doClear()">🗑️ 清除內容</button>
     </div>
     
-    <button class="btn-copy" onclick="copyText()">📋 複製結果 (免跳窗)</button>
-    <div id="copyStatus"></div>
+    <button class="btn-copy" onclick="doCopy()">📋 複製結果 (免跳窗)</button>
+    <div id="msg"></div>
 
-    <div id="resultBox" class="output-box">美化結果將顯示於此...</div>
+    <div id="outputArea" class="result-area">結果將顯示於此...</div>
 </div>
 
 <script>
-    const emojis = {
-        normalTitle: ["✨", "🎊", "🎉", "🔥"],
-        bigTitle: ["👑", "💎", "🏆", "🌟", "📣", "🎊", "🏮"],
-        arrows: ["🚩", "➡️", "📍", "🎯", "⚡"],
-        checks: ["✅", "✔️", "🎖️", "💪", "💯"],
+    // 嚴選符號庫
+    const pool = {
+        title: ["✨", "🎊", "🎉", "🔥", "🌟", "👑"],
+        arrows: ["➔", "⏩", "⏬", "🚩", "📍"], // 強制加入要求的符號
+        checks: ["✅", "✔️", "🎖️", "🏆", "💪"],
         dates: ["🐣", "🗓️", "☀️", "⏰"],
-        luxury: ["💰", "💎", "🥂", "🧧", "🌈", "🔥", "🚀", "🧨"]
+        luxury: ["💎", "🥂", "🥳", "🌈", "🔥", "🚀", "🧨", "🎊"] // 移除金錢相關
     };
 
     function pick(arr) {
         return arr[Math.floor(Math.random() * arr.length)];
     }
 
-    // 偵測是否為大泡模式
-    function detectMode() {
-        const text = document.getElementById('inputText').value;
-        const status = document.getElementById('modeStatus');
+    function checkMode() {
+        const text = document.getElementById('inputArea').value;
+        const mode = document.getElementById('modeDisplay');
         if (text.includes("大泡")) {
-            status.innerHTML = "<b style='color:#b38728;'>🔥 已偵測：【大泡成交】模式（豪華裝飾啟動）</b>";
+            mode.innerHTML = "<b style='color:orange;'>🔥 大泡成交模式：華麗度加倍！</b>";
         } else {
-            status.innerText = "一般成交模式";
+            mode.innerText = "一般成交模式";
         }
-        document.getElementById('copyStatus').innerText = ""; // 重置複製狀態
+        document.getElementById('msg').innerText = "";
     }
 
-    // 清除功能
-    function clearAll() {
-        document.getElementById('inputText').value = "";
-        document.getElementById('resultBox').innerText = "美化結果將顯示於此...";
-        document.getElementById('modeStatus').innerText = "等待輸入...";
-        document.getElementById('copyStatus').innerText = "";
+    function doClear() {
+        document.getElementById('inputArea').value = "";
+        document.getElementById('outputArea').innerText = "結果將顯示於此...";
+        document.getElementById('modeDisplay').innerText = "請輸入成交資訊...";
+        document.getElementById('msg').innerText = "";
     }
 
-    // 生成美化文字
     function generate() {
-        const raw = document.getElementById('inputText').value.trim();
+        const raw = document.getElementById('inputArea').value.trim();
         if (!raw) return;
 
         const isBig = raw.includes("大泡");
         const lines = raw.split('\n');
         
-        const processed = lines.map((line, i) => {
+        const result = lines.map((line, i) => {
             let content = line.trim();
             if (!content) return "";
 
             // 第一行標題
             if (i === 0) {
-                const icon = isBig ? pick(emojis.bigTitle) : pick(emojis.normalTitle);
-                return `${icon} ${content} ${icon}`;
+                const em = isBig ? "👑" : pick(pool.title);
+                return `${em} ${content} ${em}`;
             }
 
-            // 案名
+            // 案名 (優先使用 紅箭頭)
             if (content.includes("案名")) {
-                return `${pick(emojis.arrows)} ${content}`;
+                return `➔ ${content}`;
             }
 
-            // 開發/銷售
+            // 開發/銷售 (使用 雙箭頭右 或 勾選)
             if (content.includes("開發") || content.includes("銷售")) {
-                return `${pick(emojis.checks)} ${content}`;
+                return `⏩ ${content}`;
             }
 
-            // 時間日期
+            // 日期/時間 (使用 雙箭頭下 或 時鐘)
             if (content.includes("日期") || content.includes("時間") || content.includes("成交")) {
-                return `${pick(emojis.dates)} ${content}`;
+                return `⏬ ${content}`;
             }
 
-            // 祝賀語
+            // 結尾/祝賀
             if (content.includes("祝") || content.includes("賀") || isBig) {
-                const suffix = isBig ? `${pick(emojis.luxury)}${pick(emojis.luxury)}` : pick(emojis.luxury);
-                return `${content} ${suffix}`;
+                const deco = isBig ? `${pick(pool.luxury)}${pick(pool.luxury)}` : pick(pool.luxury);
+                return `${content} ${deco}`;
             }
 
             return `🔹 ${content}`;
         });
 
-        document.getElementById('resultBox').innerText = processed.join('\n');
-        document.getElementById('copyStatus').innerText = ""; 
+        document.getElementById('outputArea').innerText = result.join('\n');
     }
 
-    // 複製功能 (移除 Alert)
-    async function copyText() {
-        const text = document.getElementById('resultBox').innerText;
-        if (text.includes("美化結果")) return;
+    async function doCopy() {
+        const text = document.getElementById('outputArea').innerText;
+        if (text.includes("結果將顯示")) return;
 
         try {
             await navigator.clipboard.writeText(text);
-            const status = document.getElementById('copyStatus');
-            status.innerText = "✅ 已成功複製到剪貼簿！";
-            // 3秒後自動消失提示文字
-            setTimeout(() => { status.innerText = ""; }, 3000);
-        } catch (err) {
-            console.error('複製失敗', err);
+            const msg = document.getElementById('msg');
+            msg.innerText = "✅ 已複製！直接去 LINE 貼上即可。";
+            setTimeout(() => { msg.innerText = ""; }, 3000);
+        } catch (e) {
+            console.error(e);
         }
     }
 </script>

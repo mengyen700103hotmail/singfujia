@@ -3,197 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>幸福家成交訊息美化助手</title>
+    <title>幸福家大泡成交美化助手</title>
     <style>
         :root {
-            --primary-color: #e60012; /* 幸福家企業色意象 */
-            --bg-color: #f4f4f9;
+            --gold-gradient: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+            --xingfu-red: #e60012;
+            --bg-color: #f7f9fc;
         }
 
         body {
-            font-family: "Microsoft JhengHei", sans-serif;
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
             background-color: var(--bg-color);
+            padding: 15px;
             display: flex;
             justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
         }
 
         .container {
             background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             width: 100%;
             max-width: 600px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 25px;
+            box-sizing: border-box;
         }
 
         h2 {
-            color: var(--primary-color);
             text-align: center;
-            margin-bottom: 1.5rem;
+            color: var(--xingfu-red);
+            margin-bottom: 20px;
+            font-size: 22px;
+            letter-spacing: 1px;
+        }
+
+        .mode-indicator {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            height: 20px;
         }
 
         textarea {
             width: 100%;
-            height: 200px;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
+            height: 180px;
+            padding: 15px;
+            border: 2px solid #eaedf2;
+            border-radius: 12px;
             font-size: 16px;
             box-sizing: border-box;
-            resize: vertical;
-            margin-bottom: 1rem;
+            outline: none;
+            transition: 0.3s;
+            margin-bottom: 15px;
         }
 
-        .button-group {
+        textarea:focus {
+            border-color: var(--xingfu-red);
+        }
+
+        .btn-group {
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
         button {
             flex: 1;
-            padding: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
+            padding: 15px;
+            border-radius: 10px;
             border: none;
-            border-radius: 8px;
-            transition: 0.3s;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
         }
 
-        .btn-generate {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .btn-generate:hover {
-            background-color: #b3000e;
+        .btn-gold {
+            background: var(--gold-gradient);
+            color: #333;
+            box-shadow: 0 4px 15px rgba(180, 140, 40, 0.3);
         }
 
         .btn-copy {
-            background-color: #28a745;
+            background-color: #25d366;
             color: white;
         }
 
-        .btn-copy:hover {
-            background-color: #218838;
+        button:active {
+            transform: scale(0.97);
         }
 
-        .output-area {
-            margin-top: 1.5rem;
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 8px;
-            border: 1px dashed #adb5bd;
-            white-space: pre-wrap; /* 保留換行 */
-            word-wrap: break-word;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-
-        .hint {
-            font-size: 12px;
-            color: #666;
-            margin-top: 0.5rem;
+        .output-box {
+            background-color: #fffdf2;
+            border: 1px solid #ffeeba;
+            border-radius: 12px;
+            padding: 20px;
+            white-space: pre-wrap;
+            line-height: 1.8;
+            font-size: 17px;
+            color: #2c3e50;
+            min-height: 100px;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>✨ 成交訊息美化助手</h2>
+    <h2>🏆 幸福家菁英成交助手</h2>
+    <div id="modeStatus" class="mode-indicator">輸入文字自動偵測成交規格...</div>
     
-    <textarea id="inputChat" placeholder="請貼上成交訊息，例如：&#10;塩行店大泡成交通知&#10;案名：...&#10;開發：..."></textarea>
+    <textarea id="inputText" oninput="detectMode()" placeholder="請貼上成交內容，例如：&#10;湖美店大泡成交通知&#10;案名：..."></textarea>
 
-    <div class="button-group">
-        <button class="btn-generate" onclick="beautifyText()">✨ 自動美化</button>
-        <button class="btn-copy" onclick="copyToClipboard()">📋 複製結果</button>
+    <div class="btn-group">
+        <button class="btn-gold" onclick="generate()">✨ 豪華美化生成</button>
+        <button class="btn-copy" onclick="copyText()">📋 複製發送</button>
     </div>
 
-    <div id="outputArea" class="output-area">美化後的結果會顯示在這裡...</div>
-    <p class="hint">提示：程式會自動辨識關鍵字並隨機分配適合的表情符號。</p>
+    <div id="resultBox" class="output-box">美化結果將顯示於此...</div>
 </div>
 
 <script>
-    // 定義適合不動產成交氛圍的表情符號庫
-    const emojiLib = {
-        title: ["✨", "🎊", "🎉", "🔥", "💎"],
-        caseName: ["➡️", "🏠", "🏢", "📍"],
-        person: ["✔️", "👤", "💼", "🤝"],
-        date: ["🐣", "📅", "⏰", "☀️"],
-        footer: ["🥳", "㊗️", "🥂", "💰", "🌈"]
+    // 符號池定義
+    const emojis = {
+        normalTitle: ["✨", "🎊", "🎉", "🔥"],
+        bigTitle: ["👑", "💎", "🏆", "🌟", "📣", "🎊", "🏮"],
+        arrows: ["🚩", "➡️", "📍", "🎯", "⚡"],
+        checks: ["✅", "✔️", "🎖️", "💪", "💯"],
+        dates: ["🐣", "🗓️", "☀️", "⏰"],
+        luxury: ["💰", "💎", "🥂", "🧧", "🌈", "🔥", "🚀", "🧨"]
     };
 
-    /**
-     * 隨機取得陣列中的一個元素
-     */
-    function getRandom(arr) {
+    function pick(arr) {
         return arr[Math.floor(Math.random() * arr.length)];
     }
 
-    /**
-     * 核心邏輯：美化文字
-     */
-    function beautifyText() {
-        const input = document.getElementById('inputChat').value.trim();
-        if (!input) {
-            alert("請先輸入文字內容喔！");
-            return;
+    function detectMode() {
+        const text = document.getElementById('inputText').value;
+        const status = document.getElementById('modeStatus');
+        if (text.includes("大泡")) {
+            status.innerHTML = "<b style='color:#b38728;'>🔥 已偵測：【大泡成交】模式（自動開啟豪華裝飾）</b>";
+        } else {
+            status.innerText = "一般成交模式";
         }
+    }
 
-        let lines = input.split('\n');
-        let processedLines = lines.map((line, index) => {
-            line = line.trim();
-            if (line === "") return "";
+    function generate() {
+        const raw = document.getElementById('inputText').value.trim();
+        if (!raw) return;
 
-            // 1. 第一行通常是標題
-            if (index === 0) {
-                const em = getRandom(emojiLib.title);
-                return `${em}${line}${em}`;
+        const isBig = raw.includes("大泡");
+        const lines = raw.split('\n');
+        
+        const processed = lines.map((line, i) => {
+            let content = line.trim();
+            if (!content) return "";
+
+            // 1. 標題行
+            if (i === 0) {
+                const icon = isBig ? pick(emojis.bigTitle) : pick(emojis.normalTitle);
+                return `${icon}${content}${icon}`;
             }
 
             // 2. 案名
-            if (line.includes("案名")) {
-                return `${getRandom(emojiLib.caseName)}${line}`;
+            if (content.includes("案名")) {
+                return `${pick(emojis.arrows)} ${content}`;
             }
 
-            // 3. 開發或銷售
-            if (line.includes("開發") || line.includes("銷售")) {
-                return `${getRandom(emojiLib.person)}${line}`;
+            // 3. 人員 (開發、銷售)
+            if (content.includes("開發") || content.includes("銷售")) {
+                return `${pick(emojis.checks)} ${content}`;
             }
 
-            // 4. 日期或時間
-            if (line.includes("日期") || line.includes("時間") || line.includes("成交")) {
-                return `${getRandom(emojiLib.date)}${line}`;
+            // 4. 時間
+            if (content.includes("日期") || content.includes("時間") || content.includes("成交")) {
+                return `${pick(emojis.dates)} ${content}`;
             }
 
-            // 5. 結尾祝賀語
-            if (line.includes("祝") || line.includes("賀")) {
-                return `${line}${getRandom(emojiLib.footer)}`;
+            // 5. 祝賀詞或結尾
+            if (content.includes("祝") || content.includes("賀") || isBig) {
+                const suffix = isBig ? `${pick(emojis.luxury)}${pick(emojis.luxury)}` : pick(emojis.luxury);
+                return `${content} ${suffix}`;
             }
 
-            // 其他行數隨機給予一個點綴
-            return `🔹 ${line}`;
+            return `🔹 ${content}`;
         });
 
-        const result = processedLines.join('\n');
-        document.getElementById('outputArea').innerText = result;
+        document.getElementById('resultBox').innerText = processed.join('\n');
     }
 
-    /**
-     * 複製到剪貼簿
-     */
-    function copyToClipboard() {
-        const text = document.getElementById('outputArea').innerText;
-        if (text === "美化後的結果會顯示在這裡...") return;
-
-        navigator.clipboard.writeText(text).then(() => {
-            alert("已複製到剪貼簿，可以去 LINE 貼上囉！");
-        }).catch(err => {
-            console.error('無法複製', err);
-        });
+    async function copyText() {
+        const text = document.getElementById('resultBox').innerText;
+        await navigator.clipboard.writeText(text);
+        alert("複製成功！祝您案源不斷，冒泡連連！");
     }
 </script>
 
